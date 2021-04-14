@@ -56,6 +56,8 @@ public class FXMLController {
 
     	} catch (NumberFormatException e) {
     		txtResult.setText("Inserire un numero di crediti > 0");
+    	} catch(ArithmeticException ae) {
+    		txtResult.setText("Inserire un numero di crediti compreso tra 3 e 167");
     	}
     }
 
