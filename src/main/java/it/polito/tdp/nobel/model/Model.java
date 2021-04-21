@@ -1,6 +1,8 @@
 package it.polito.tdp.nobel.model;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -10,8 +12,9 @@ public class Model {
 
 	private List<Esame> partenza;
 	//e' un problema di ottimizzazione: struttura dati per salvare soluzione migliore
-	private Set<Esame> soluzioneMigliore;
+	private Set<Esame> soluzioneMigliore; //private List<Esame> soluzioneMigliore;
 	private double mediaSoluzioneMigliore;
+	private int casiTestati = 0;
 	
 	public Model() {
 		EsameDAO dao=new EsameDAO();
@@ -19,19 +22,23 @@ public class Model {
 	}
 	
 	public Set<Esame> calcolaSottoinsiemeEsami(int numeroCrediti) {
-		Set<Esame> parziale=new HashSet<Esame>();
+		Set<Esame> parziale=new LinkedHashSet<Esame>();
+		//List<Esame> parziale = new ArrayList<Esame>();-->Trasformo set in liste per poter ottimizzare cerca1!
+		
 		soluzioneMigliore=new HashSet<Esame>();//ogni volta che calcolo insieme esami la lista si pulisce
 		mediaSoluzioneMigliore=0;
-		
-		//cerca1(parziale,0,numeroCrediti);
-		cerca2(parziale,0,numeroCrediti);
+		casiTestati = 0;
+		cerca1(parziale,0,numeroCrediti);
+		//cerca2(parziale,0,numeroCrediti);
 		return soluzioneMigliore;//se e' vuota non ho trovato la soluzione migliore	
 	}
 
 	/*COMPLESSITA: N!*/
 	private void cerca1(Set<Esame> parziale, int L, int m) {
-		//CASI TERMINALI
+		casiTestati ++;
+		System.out.println("L = " + L + "\t" + parziale);
 		
+		//CASI TERMINALI
 		int crediti=sommaCrediti(parziale);//somma corrente dei crediti di parziale
 		if(crediti>m) {
 			return;
@@ -60,25 +67,41 @@ public class Model {
 				parziale.remove(e);
 			}
 		}
+		//modifica approccio per renderlo piu' efficiente, come cerca 2
+		/*
+		int lastIndex=0;
+		if(parziale.size()>0) {
+			lastIndex=partenza.indexOf(parziale.get(parziale.size()-1));//-->da fare con la lista!
+		}
+		for(int i=lastIndex;i<partenza.size();i++) {
+			if(!parziale.contains(partenza.get(i))) {
+				parziale.add(partenza.get(i));
+				cerca1(parziale,L+1,m);
+				parziale.remove(partenza.get(i));
+			}
+		}
+		*/
 	
 	}
 	
 	//Complessita: 2^N
 	private void cerca2(Set<Esame> parziale, int L, int m) {
+		casiTestati ++;
+		
 		//CASI TERMINALI
 		int crediti=sommaCrediti(parziale);
 		if(crediti>m) {
 				return;
 			}
-			if(crediti==m) {
+		if(crediti==m) {
 				double media=calcolaMedia(parziale);
 				if(media>mediaSoluzioneMigliore) {
 					soluzioneMigliore=new HashSet<>(parziale);//la soluzione migliore diventa la parziale che sto analizzando
 					mediaSoluzioneMigliore=media;
 				}
 				return;
-			}
-			if(L==partenza.size()) {
+		}
+		if(L==partenza.size()) {
 				return;
 			}
 			
@@ -111,6 +134,10 @@ public class Model {
 			somma += e.getCrediti();
 		
 		return somma;
+	}
+	
+	public int getCasiTestati() {
+		return this.casiTestati;
 	}
 
 }
